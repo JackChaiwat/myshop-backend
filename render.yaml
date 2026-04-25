@@ -1,0 +1,83 @@
+services:
+  - type: web
+    name: myshop-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: myshop-db
+          property: connectionString
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 30
+      # ใส่ใน Render dashboard — Environment tab
+      - key: ALLOWED_ORIGINS
+        sync: false   # ["https://myshop-frontend.onrender.com"]
+      - key: ALLOWED_HOSTS
+        sync: false   # ["myshop-backend.onrender.com"]
+      - key: FRONTEND_URL
+        sync: false   # https://myshop-frontend.onrender.com
+      # Email
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      # Cloudflare R2
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: shop-assets
+      - key: R2_PUBLIC_URL
+        sync: false
+      # Payment
+      - key: OMISE_PUBLIC_KEY
+        sync: false
+      - key: OMISE_SECRET_KEY
+        sync: false
+      - key: OMISE_WEBHOOK_SECRET
+        sync: false
+      # Optional services
+      - key: MEILISEARCH_URL
+        value: ""
+      - key: MEILISEARCH_API_KEY
+        value: ""
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: N8N_WEBHOOK_URL
+        sync: false
+      - key: LEMONSQUEEZY_API_KEY
+        sync: false
+      - key: LEMONSQUEEZY_STORE_ID
+        sync: false
+      - key: LEMONSQUEEZY_WEBHOOK_SECRET
+        sync: false
+
+databases:
+  - name: myshop-db
+    plan: free
+    databaseName: shopdb
+    user: shopuser
