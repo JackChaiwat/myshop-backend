@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import get_db
-from app.models import User, UserRole
+from app.models.models import User, UserRole
 from app.core.auth import hash_password
 
 router = APIRouter(prefix="/seed", tags=["seed"])
@@ -20,7 +20,7 @@ async def seed_admin(db: AsyncSession = Depends(get_db)):
         email="admin@example.com",
         hashed_password=hash_password("admin1234"),
         full_name="Admin",
-        role=UserRole.admin,       # ✅ ใช้ enum ไม่ใช่ string
+        role=UserRole.admin,
         is_active=True,
         is_verified=True,
     )
