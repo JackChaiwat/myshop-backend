@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 @router.get("/categories")
 async def list_categories_public(db: AsyncSession = Depends(get_db)):
-    """ดึงหมวดหมู่ทั้งหมด — public"""
     result = await db.execute(select(Category).order_by(Category.name))
     cats = result.scalars().all()
     return [{"id": c.id, "name": c.name, "slug": c.slug} for c in cats]
@@ -52,7 +51,6 @@ async def featured_products(db: AsyncSession = Depends(get_db)):
     return await get_featured_products(db)
 
 
-# ── Product detail with stats + reviews ─────────────────────────────────────
 @router.get("/{slug}", response_model=ProductDetailOut)
 async def get_product(slug: str, db: AsyncSession = Depends(get_db)):
     product = await get_product_by_slug(db, slug)
@@ -64,7 +62,6 @@ async def get_product(slug: str, db: AsyncSession = Depends(get_db)):
 
     reviews_out = []
     for r in raw_reviews:
-        # load user name
         user_result = await db.execute(select(User).where(User.id == r.user_id))
         user = user_result.scalar_one_or_none()
         reviews_out.append(ReviewOut(
@@ -100,7 +97,6 @@ async def get_product(slug: str, db: AsyncSession = Depends(get_db)):
     )
 
 
-# ── Reviews ──────────────────────────────────────────────────────────────────
 @router.post("/{product_id}/reviews", response_model=ReviewOut)
 async def add_review(
     product_id: str,
@@ -146,7 +142,12 @@ async def create(
     _admin=Depends(require_admin),
 ):
     product = await create_product(db, body)
-    await index_product(product)
+    await db.commit()           # ✅
+    await db.refresh(product)   # ✅
+    try:
+        await index_product(product)
+    except Exception as e:
+        logger.warning(f"Meilisearch index failed: {e}")
     return product
 
 
@@ -160,7 +161,12 @@ async def update(
     product = await update_product(db, product_id, body)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    await index_product(product)
+    await db.commit()           # ✅
+    await db.refresh(product)   # ✅
+    try:
+        await index_product(product)
+    except Exception as e:
+        logger.warning(f"Meilisearch index failed: {e}")
     return product
 
 
@@ -171,7 +177,11 @@ async def delete(
     _admin=Depends(require_admin),
 ):
     await delete_product(db, product_id)
-    await delete_product_index(product_id)
+    await db.commit()           # ✅
+    try:
+        await delete_product_index(product_id)
+    except Exception as e:
+        logger.warning(f"Meilisearch delete index failed: {e}")
     return {"message": "Deleted"}
 
 
