@@ -42,7 +42,13 @@ def upgrade() -> None:
     sa.Column('value', sa.Text(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.alter_column('products', 'how_to',
+    # Skip alter how_to if column doesn't exist yet
+    from sqlalchemy import inspect, text
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [c['name'] for c in inspector.get_columns('products')]
+    if 'how_to' in columns:
+        op.alter_column('products', 'how_to',
                existing_type=postgresql.JSONB(astext_type=sa.Text()),
                nullable=False,
                existing_server_default=sa.text("'[]'::jsonb"))
