@@ -15,7 +15,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('users', sa.Column('avatar_url', sa.String(500), nullable=True))
+    from sqlalchemy import inspect
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [c['name'] for c in inspector.get_columns('users')]
+    if 'avatar_url' not in columns:
+        op.add_column('users', sa.Column('avatar_url', sa.String(500), nullable=True))
 
 
 def downgrade() -> None:
