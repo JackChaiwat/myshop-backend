@@ -16,12 +16,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add how_to column to products
     op.add_column('products',
         sa.Column('how_to', postgresql.JSONB(astext_type=sa.Text()), nullable=True, server_default='[]')
     )
-
-    # Create reviews table
     op.create_table('reviews',
         sa.Column('id', sa.String(), nullable=False),
         sa.Column('product_id', sa.String(), nullable=False),
@@ -44,19 +41,3 @@ def downgrade() -> None:
     op.drop_index('ix_reviews_product_id', table_name='reviews')
     op.drop_table('reviews')
     op.drop_column('products', 'how_to')
-
-from alembic import op
-import sqlalchemy as sa
- 
-revision = 'a1b2c3d4e5f6'
-down_revision = None  # แก้เป็น revision id ล่าสุดของโปรเจกต์
-branch_labels = None
-depends_on = None
- 
- 
-def upgrade() -> None:
-    op.add_column('users', sa.Column('avatar_url', sa.String(500), nullable=True))
- 
- 
-def downgrade() -> None:
-    op.drop_column('users', 'avatar_url')
