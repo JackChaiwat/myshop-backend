@@ -22,15 +22,15 @@ class Settings(BaseSettings):
 
     # CORS
     ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "https://myshop-frontend-nn8g.onrender.com",  # ✅
-    ]
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://myshop-frontend-nn8g.onrender.com",  # ✅ เพิ่มบรรทัดนี้
+]
     ALLOWED_HOSTS: List[str] = [
-        "localhost",
-        "myshop-backend-x9n4.onrender.com",   # ✅
-        "myshop-frontend-nn8g.onrender.com",   # ✅
-    ]
+    "localhost",
+    "myshop-backend-x9n4.onrender.com",   # ✅ เพิ่มบรรทัดนี้
+    "myshop-frontend-nn8g.onrender.com",   # ✅ เพิ่มบรรทัดนี้
+]
 
     LEMONSQUEEZY_API_KEY: str = ""
     LEMONSQUEEZY_STORE_ID: str = ""
