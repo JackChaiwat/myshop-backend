@@ -45,6 +45,7 @@ def upgrade() -> None:
     conn = op.get_bind()
     from sqlalchemy import inspect
     inspector = inspect(conn)
+    existing_tables = inspector.get_table_names()
 
     # Skip alter how_to if column doesn't exist
     columns = [c['name'] for c in inspector.get_columns('products')]
@@ -54,20 +55,19 @@ def upgrade() -> None:
                nullable=False,
                existing_server_default=sa.text("'[]'::jsonb"))
 
-    # Skip drop index if it doesn't exist
-    indexes = [i['name'] for i in inspector.get_indexes('reviews')]
-    if 'ix_reviews_user_product' in indexes:
-        op.drop_index('ix_reviews_user_product', table_name='reviews')
+    if 'reviews' in existing_tables:
+        indexes = [i['name'] for i in inspector.get_indexes('reviews')]
+        if 'ix_reviews_user_product' in indexes:
+            op.drop_index('ix_reviews_user_product', table_name='reviews')
 
-    # Skip drop constraint if it doesn't exist
-    fks = [fk['name'] for fk in inspector.get_foreign_keys('reviews')]
-    if 'reviews_user_id_fkey' in fks:
-        op.drop_constraint('reviews_user_id_fkey', 'reviews', type_='foreignkey')
-    if 'reviews_product_id_fkey' in fks:
-        op.drop_constraint('reviews_product_id_fkey', 'reviews', type_='foreignkey')
+        fks = [fk['name'] for fk in inspector.get_foreign_keys('reviews')]
+        if 'reviews_user_id_fkey' in fks:
+            op.drop_constraint('reviews_user_id_fkey', 'reviews', type_='foreignkey')
+        if 'reviews_product_id_fkey' in fks:
+            op.drop_constraint('reviews_product_id_fkey', 'reviews', type_='foreignkey')
 
-    op.create_foreign_key(None, 'reviews', 'products', ['product_id'], ['id'])
-    op.create_foreign_key(None, 'reviews', 'users', ['user_id'], ['id'])
+        op.create_foreign_key(None, 'reviews', 'products', ['product_id'], ['id'])
+        op.create_foreign_key(None, 'reviews', 'users', ['user_id'], ['id'])
 
 
 def downgrade() -> None:
