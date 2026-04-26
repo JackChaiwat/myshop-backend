@@ -21,8 +21,16 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:5173"]
-    ALLOWED_HOSTS: List[str] = ["localhost"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://myshop-frontend-nn8g.onrender.com",  # ✅
+    ]
+    ALLOWED_HOSTS: List[str] = [
+        "localhost",
+        "myshop-backend-x9n4.onrender.com",   # ✅
+        "myshop-frontend-nn8g.onrender.com",   # ✅
+    ]
 
     LEMONSQUEEZY_API_KEY: str = ""
     LEMONSQUEEZY_STORE_ID: str = ""
@@ -88,7 +96,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-
 
 
 settings = Settings()
