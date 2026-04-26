@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings
 from typing import List
 from pydantic import field_validator
+import json
+
 
 class Settings(BaseSettings):
     # App
@@ -20,23 +22,24 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:5173"
 
-    # CORS
+    # CORS — default ใช้ได้แค่ local dev
+    # production: ต้องตั้ง ALLOWED_ORIGINS และ ALLOWED_HOSTS ใน Render dashboard เสมอ
     ALLOWED_ORIGINS: List[str] = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://myshop-frontend-nn8g.onrender.com",  # ✅ เพิ่มบรรทัดนี้
-]
-    ALLOWED_HOSTS: List[str] = [
-    "localhost",
-    "myshop-backend-x9n4.onrender.com",   # ✅ เพิ่มบรรทัดนี้
-    "myshop-frontend-nn8g.onrender.com",   # ✅ เพิ่มบรรทัดนี้
-]
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+    ]
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
 
+    # Payment
     LEMONSQUEEZY_API_KEY: str = ""
     LEMONSQUEEZY_STORE_ID: str = ""
     LEMONSQUEEZY_WEBHOOK_SECRET: str = ""
+    OMISE_PUBLIC_KEY: str = ""
+    OMISE_SECRET_KEY: str = ""
+    OMISE_WEBHOOK_SECRET: str = ""
 
-    # Resend
+    # Email
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "onboarding@resend.dev"
     SMTP_HOST: str = "smtp.gmail.com"
@@ -55,22 +58,28 @@ class Settings(BaseSettings):
     MEILISEARCH_URL: str = "http://meilisearch:7700"
     MEILISEARCH_API_KEY: str = "masterkey"
 
-    # PostHog
+    # Optional services
     POSTHOG_API_KEY: str = ""
-
-    # Sentry
     SENTRY_DSN: str = ""
-
-    # Gemini AI
     GEMINI_API_KEY: str = ""
-
-    # n8n
     N8N_WEBHOOK_URL: str = ""
 
-    # Omise
-    OMISE_PUBLIC_KEY: str = ""
-    OMISE_SECRET_KEY: str = ""
-    OMISE_WEBHOOK_SECRET: str = ""
+    # ─── Validators ───────────────────────────────────────────────────────────
+
+    @field_validator("ALLOWED_ORIGINS", "ALLOWED_HOSTS", mode="before")
+    @classmethod
+    def parse_list_env(cls, v):
+        """
+        Render ส่ง env var เป็น string เสมอ รองรับทั้ง 2 รูปแบบ:
+          ["https://myshop-frontend-nn8g.onrender.com","http://localhost:5173"]
+          https://myshop-frontend-nn8g.onrender.com,http://localhost:5173
+        """
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                return json.loads(v)
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
 
     @field_validator("JWT_SECRET")
     @classmethod
@@ -79,7 +88,7 @@ class Settings(BaseSettings):
         if secret_key and v == secret_key:
             raise ValueError(
                 "JWT_SECRET must be different from SECRET_KEY. "
-                "Generate a separate secret: python -c \"import secrets; print(secrets.token_hex(32))\""
+                'Generate with: python -c "import secrets; print(secrets.token_hex(32))"'
             )
         return v
 
@@ -89,8 +98,8 @@ class Settings(BaseSettings):
         debug = info.data.get("DEBUG", False)
         if not debug and "*" in v:
             raise ValueError(
-                'ALLOWED_HOSTS=[\"*\"] is not allowed in production (DEBUG=false). '
-                "Specify your actual domain(s)."
+                'ALLOWED_HOSTS=["*"] is not allowed when DEBUG=false. '
+                "Set your actual domain(s) instead."
             )
         return v
 
